@@ -9,6 +9,7 @@
 // npm install cors - nuevo
 // npm i cors -permite que el frontend pueda hacer peticiones a este backend sin problemas de CORS (Cross-Origin Resource Sharing)
 // npm i jsonwebtoken bcryptjs - nuevo
+// npm i express-rate-limit  para ponerle un limite a nuestras peticiones 
 
 const express = require('express')
 const {pool} = require('./src/db')
@@ -16,6 +17,7 @@ const cors = require('cors') // nuevo
 const { router: productosRouter } = require('./src/routes/productos.route')
 const { router: usersRouter } = require('./src/routes/users.route')
 const { sign, authMiddleware } = require('./src/auth')
+const rateLimit = require('express-rate-limit');
 
 const PORT = process.env.PORT || 3001 // Si no se define la variable de entorno PORT, se usará el puerto 3001 por defecto
 const app = express()
@@ -24,6 +26,14 @@ const allowed = [
   'http://localhost:3000', // React
   'http://localhost:3001', // Backend
 ];
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100,                 // 100 peticiones
+  message: 'Demasiadas solicitudes, por favor, intente de nuevo más tarde'
+});
+
+app.use(limiter);
 
 app.use(cors({                    // middleware que se utiliza para habilitar el intercambio de recursos de origen cruzado (CORS) en aplicaciones web.
   origin: function (origin, cb) { // De donde viene la petición.
@@ -61,18 +71,18 @@ app.get('/privado', authMiddleware, (req, res) => { // no fácilmente accesible,
     user: req.user})
 })
 
-app.get('health', (req, res) => {
-  res.json({ok: true, service:'api'})
-})
-
-// app.get('health', async (req, res) => {
-//   try {
-//     await pool.query('select 1');
-//     return res.json({ok: true})
-//   } catch (err) {
-//     return res.status(500).json({ ok:false })
-//   }
+// app.get('health', (req, res) => {
+//   res.json({ok: true, service:'api'})
 // })
+
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('select 1');
+    return res.json({ok: true})
+  } catch (err) {
+    return res.status(500).json({ ok:false })
+  }
+})
 
 app.get('health/db', async (req, res) => {
   try {
