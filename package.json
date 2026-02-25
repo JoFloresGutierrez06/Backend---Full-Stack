@@ -8,6 +8,7 @@
   "type": "json",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "dev": "nodemon index.js",
     "test:unit": "jest --config=jest.unit.config.js",
     "test:integration": "jest --config=jest.integration.config.js",
