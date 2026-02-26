@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.post('/login', controller.loginUser)
 router.post('/create', authMiddleware, requireRole('admin'), controller.create)
+// router.post('/create', controller.create)
 
 module.exports = { router}
